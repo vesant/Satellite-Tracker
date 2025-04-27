@@ -27,3 +27,4 @@ Run this command in your teminal (inside the folder):
 ```bash
 python main.py
 ```
+# DON'T FORGET TO ADD YOUR API
