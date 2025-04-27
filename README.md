@@ -18,3 +18,12 @@ You can install the requirements using pip:
 
 ```bash
 pip install -r requirements.txt
+````
+
+## How to use
+
+Run this command in your teminal (inside the folder):
+
+```bash
+python main.py
+```
