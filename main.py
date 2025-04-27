@@ -13,8 +13,8 @@ console = Console()
 
 # === configs ===
 API_KEY = 'xxxxxx-xxxxxx-xxxxxx-xxxx' # put your api from n2yo
-DEFAULT_LAT = 38.575066 # put yours
-DEFAULT_LON = -8.778905 # put yours
+DEFAULT_LAT = xxxx # put yours
+DEFAULT_LON = -xxxx # put yours
 
 # === important functions ===
 def utc_to_local(utc_timestamp):
