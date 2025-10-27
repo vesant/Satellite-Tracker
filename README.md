@@ -14,17 +14,38 @@ The project uses the [N2YO API](https://www.n2yo.com/api/) to fetch satellite da
 
 ## Installation
 
-You can install the requirements using pip:
+1. Clone this repository or download the files.
+
+2. Install the required dependencies using pip:
 
 ```bash
 pip install -r requirements.txt
-````
+```
+
+3. **Configure your API key and default location:**
+
+   - Copy the example configuration file:
+     ```bash
+     cp config.example.json config.json
+     ```
+   
+   - Edit `config.json` and add your N2YO API key and default coordinates:
+     ```json
+     {
+       "API_KEY": "your-n2yo-api-key-here",
+       "DEFAULT_LAT": 40.0,
+       "DEFAULT_LON": -8.0
+     }
+     ```
+   
+   - Get your free API key from [N2YO](https://www.n2yo.com/api/)
 
 ## How to use
 
-Run this command in your teminal (inside the folder):
+Run this command in your terminal (inside the folder):
 
 ```bash
 python main.py
 ```
-# DON'T FORGET TO ADD YOUR API
+
+**Note:** Make sure you have created the `config.json` file with your API key before running the application.

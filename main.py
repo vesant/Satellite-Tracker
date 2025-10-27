@@ -1,22 +1,66 @@
 from click import prompt
 import requests
 import time
+import json
+import os
 from ascii_ui import show_intro, choose_location, show_categories, radar_real #, radar_animation
 from notifier import send_notification
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 from datetime import datetime, timezone
+from requests.exceptions import Timeout, HTTPError, RequestException
 # if anything is in portuguese, let me know so i can assist you with that! (english is not my main language)
 
 console = Console()
 
 # === configs ===
-API_KEY = 'xxxxxx-xxxxxx-xxxxxx-xxxx' # put your api from n2yo
-DEFAULT_LAT = 1111 # put yours
-DEFAULT_LON = -1111 # put yours
+def load_config():
+    """Load configuration from config.json file."""
+    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            return config.get('API_KEY'), config.get('DEFAULT_LAT'), config.get('DEFAULT_LON')
+    except FileNotFoundError:
+        console.print("[bold red]Error: config.json not found![/bold red]")
+        console.print("Please create a config.json file based on config.example.json")
+        exit(1)
+    except json.JSONDecodeError as e:
+        console.print(f"[bold red]Error: Invalid JSON in config.json: {e}[/bold red]")
+        exit(1)
+
+API_KEY, DEFAULT_LAT, DEFAULT_LON = load_config()
 
 # === important functions ===
+def make_api_request(url, timeout=10):
+    """
+    Utility function to make API requests with proper error handling.
+    
+    Args:
+        url: The URL to request
+        timeout: Timeout in seconds (default: 10)
+    
+    Returns:
+        Response JSON data or None if error occurred
+    """
+    try:
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()  # Raises HTTPError for bad status codes
+        return response.json()
+    except Timeout:
+        console.print("[bold red]Error: Request timed out. Please check your internet connection.[/bold red]")
+        return None
+    except HTTPError as e:
+        console.print(f"[bold red]Error: HTTP {e.response.status_code} - {e.response.reason}[/bold red]")
+        return None
+    except RequestException as e:
+        console.print(f"[bold red]Error: Request failed - {e}[/bold red]")
+        return None
+    except json.JSONDecodeError as e:
+        console.print(f"[bold red]Error: Invalid JSON response - {e}[/bold red]")
+        return None
+
 def utc_to_local(utc_timestamp):
     return datetime.fromtimestamp(utc_timestamp).astimezone() # convert to your local timezone
 
@@ -33,20 +77,19 @@ def get_satellites_above(lat, lon, category_id):
     altitude = 0        # observer altitude (above sea level)
 
     url = f"https://api.n2yo.com/rest/v1/satellite/above/{lat}/{lon}/{altitude}/{search_radius}/{category_id}/&apiKey={API_KEY}"
-    response = requests.get(url)
-    try:
-        data = response.json()
-        #print("DEBUG RESPONSE:", data)  # debug
+    data = make_api_request(url)
+    
+    if data and 'above' in data:
         return data['above']
-    except Exception as e:
-        console.print(f"[bold red]error in API response: {e}[/bold red]")
+    else:
         return []
 
 def get_passes(satellite_id, lat, lon):
     url = f"https://api.n2yo.com/rest/v1/satellite/radiopasses/{satellite_id}/{lat}/{lon}/0/1/20/&apiKey={API_KEY}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()['passes']
+    data = make_api_request(url)
+    
+    if data and 'passes' in data:
+        return data['passes']
     else:
         return []
 
@@ -70,11 +113,21 @@ def main():
     table = Table(title="Visible satellites:")
     table.add_column("Name")
     table.add_column("ID")
+    
+    # Store valid satellite IDs for validation
+    valid_sat_ids = []
     for sat in satellites:
         table.add_row(sat['satname'], str(sat['satid']))
+        valid_sat_ids.append(str(sat['satid']))
     console.print(table)
 
-    selected_sat = Prompt.ask("\nenter the ID of the satellite you want to track")
+    # Validate satellite ID input
+    while True:
+        selected_sat = Prompt.ask("\nenter the ID of the satellite you want to track")
+        if selected_sat in valid_sat_ids:
+            break
+        else:
+            console.print(f"[bold red]Invalid satellite ID! Please choose from the list above.[/bold red]")
 
     passes = get_passes(selected_sat, lat, lon)
 
@@ -87,7 +140,7 @@ def main():
             max_time = utc_to_local(p['maxUTC'])
             end_time = utc_to_local(p['endUTC'])
 
-            console.print(f"\n🛰︎ Satélite: [cyan]{selected_sat}[/cyan]")
+            console.print(f"\n🛰︎ Satellite: [cyan]{selected_sat}[/cyan]")
             console.print(f"⏱︎ Beginning: [green]{start_time.strftime('%Y-%m-%d %H:%M:%S')}[/green] | ⚠︎ Maximum: {max_time.strftime('%Y-%m-%d %H:%M:%S')} | ☹ End: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
             seconds_until_start = p['startUTC'] - int(time.time())
