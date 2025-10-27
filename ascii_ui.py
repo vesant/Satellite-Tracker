@@ -63,7 +63,7 @@ def show_categories(categories):
         table.add_row(str(idx), cat['name'])
     console.print(table)
 
-    choice = Prompt.ask("\nchose a category", choices=[str(i) for i in range(1, len(categories) + 1)])
+    choice = Prompt.ask("\nchoose a category", choices=[str(i) for i in range(1, len(categories) + 1)])
     return categories[int(choice) - 1]['id']
 
 # def radar_animation(duration=5):

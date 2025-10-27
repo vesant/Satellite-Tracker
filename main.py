@@ -21,7 +21,22 @@ def load_config():
     try:
         with open(config_path, 'r') as f:
             config = json.load(f)
-            return config.get('API_KEY'), config.get('DEFAULT_LAT'), config.get('DEFAULT_LON')
+            api_key = config.get('API_KEY')
+            default_lat = config.get('DEFAULT_LAT')
+            default_lon = config.get('DEFAULT_LON')
+            
+            # Validate that all required config values are present
+            if not api_key:
+                console.print("[bold red]Error: API_KEY is missing in config.json![/bold red]")
+                exit(1)
+            if default_lat is None:
+                console.print("[bold red]Error: DEFAULT_LAT is missing in config.json![/bold red]")
+                exit(1)
+            if default_lon is None:
+                console.print("[bold red]Error: DEFAULT_LON is missing in config.json![/bold red]")
+                exit(1)
+            
+            return api_key, default_lat, default_lon
     except FileNotFoundError:
         console.print("[bold red]Error: config.json not found![/bold red]")
         console.print("Please create a config.json file based on config.example.json")
