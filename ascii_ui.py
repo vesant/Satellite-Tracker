@@ -29,19 +29,41 @@ def choose_location(default_lat, default_lon):
     if choice == "y":
         return default_lat, default_lon
     else:
-        lat = Prompt.ask("enter the new Latitude", default=str(default_lat))
-        lon = Prompt.ask("enter the new Longitude", default=str(default_lon))
-        return float(lat), float(lon)
+        # Validate latitude input
+        while True:
+            try:
+                lat_input = Prompt.ask("enter the new Latitude", default=str(default_lat))
+                lat = float(lat_input)
+                if -90 <= lat <= 90:
+                    break
+                else:
+                    console.print("[bold red]Latitude must be between -90 and 90 degrees![/bold red]")
+            except ValueError:
+                console.print("[bold red]Invalid input! Please enter a valid number for latitude.[/bold red]")
+        
+        # Validate longitude input
+        while True:
+            try:
+                lon_input = Prompt.ask("enter the new Longitude", default=str(default_lon))
+                lon = float(lon_input)
+                if -180 <= lon <= 180:
+                    break
+                else:
+                    console.print("[bold red]Longitude must be between -180 and 180 degrees![/bold red]")
+            except ValueError:
+                console.print("[bold red]Invalid input! Please enter a valid number for longitude.[/bold red]")
+        
+        return lat, lon
 
 def show_categories(categories):
     table = Table(title="available categories")
     table.add_column("Number", justify="center")
-    table.add_column("Catgorie", style="cyan")
+    table.add_column("Category", style="cyan")
     for idx, cat in enumerate(categories, 1):
         table.add_row(str(idx), cat['name'])
     console.print(table)
 
-    choice = Prompt.ask("\nchose a categorie", choices=[str(i) for i in range(1, len(categories) + 1)])
+    choice = Prompt.ask("\nchoose a category", choices=[str(i) for i in range(1, len(categories) + 1)])
     return categories[int(choice) - 1]['id']
 
 # def radar_animation(duration=5):
